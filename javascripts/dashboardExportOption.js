@@ -8,61 +8,84 @@
 (function() {
     'use strict';
 
-    // Wait for DOM and ensure the report form exists
-    function initDashboardExportOption() {
-        // Extend the parameter functions for email type
-        var reportType = 'email';
+    var initialized = false;
 
-        // Store original functions
-        var origReset = window.resetReportParametersFunctions ? window.resetReportParametersFunctions[reportType] : null;
-        var origUpdate = window.updateReportParametersFunctions ? window.updateReportParametersFunctions[reportType] : null;
-        var origGet = window.getReportParametersFunctions ? window.getReportParametersFunctions[reportType] : null;
+    function initDashboardExportOption() {
+        if (initialized) return;
+
+        var reportType = 'email';
 
         // Ensure objects exist
         window.resetReportParametersFunctions = window.resetReportParametersFunctions || {};
         window.updateReportParametersFunctions = window.updateReportParametersFunctions || {};
         window.getReportParametersFunctions = window.getReportParametersFunctions || {};
 
-        // Extend reset function
-        window.resetReportParametersFunctions[reportType] = function(report) {
-            if (origReset) origReset(report);
-            report.includeDashboard = false;
-            report.dashboardId = 1;
-        };
+        var resetFns = window.resetReportParametersFunctions;
+        var updateFns = window.updateReportParametersFunctions;
+        var getFns = window.getReportParametersFunctions;
 
-        // Extend update function
-        window.updateReportParametersFunctions[reportType] = function(report) {
-            if (origUpdate) origUpdate(report);
-            if (report && report.parameters) {
-                if ('includeDashboard' in report.parameters) {
-                    report.includeDashboard = report.parameters.includeDashboard;
+        // Check if ScheduledReports has set its functions yet
+        var origGet = getFns[reportType];
+        if (!origGet) {
+            // ScheduledReports hasn't initialized yet, try again later
+            setTimeout(initDashboardExportOption, 200);
+            return;
+        }
+
+        initialized = true;
+
+        var origReset = resetFns[reportType];
+        var origUpdate = updateFns[reportType];
+
+        // Wrap reset function
+        if (origReset && !origReset._dashboardExportWrapped) {
+            var wrappedReset = function(report) {
+                origReset(report);
+                report.includeDashboard = false;
+                report.dashboardId = 1;
+            };
+            wrappedReset._dashboardExportWrapped = true;
+            resetFns[reportType] = wrappedReset;
+        }
+
+        // Wrap update function
+        if (origUpdate && !origUpdate._dashboardExportWrapped) {
+            var wrappedUpdate = function(report) {
+                origUpdate(report);
+                if (report && report.parameters) {
+                    if ('includeDashboard' in report.parameters) {
+                        report.includeDashboard = report.parameters.includeDashboard;
+                    }
+                    if ('dashboardId' in report.parameters) {
+                        report.dashboardId = report.parameters.dashboardId;
+                    }
                 }
-                if ('dashboardId' in report.parameters) {
-                    report.dashboardId = report.parameters.dashboardId;
-                }
-            }
-        };
+            };
+            wrappedUpdate._dashboardExportWrapped = true;
+            updateFns[reportType] = wrappedUpdate;
+        }
 
-        // Extend get function
-        window.getReportParametersFunctions[reportType] = function(report) {
-            var result = origGet ? origGet(report) : {};
-            result.includeDashboard = report.includeDashboard || false;
-            result.dashboardId = report.dashboardId || 1;
-            return result;
-        };
+        // Wrap get function
+        if (origGet && !origGet._dashboardExportWrapped) {
+            var wrappedGet = function(report) {
+                var result = origGet(report);
+                result.includeDashboard = report.includeDashboard || false;
+                result.dashboardId = report.dashboardId || 1;
+                return result;
+            };
+            wrappedGet._dashboardExportWrapped = true;
+            getFns[reportType] = wrappedGet;
+        }
 
-        console.log('[DashboardEmailExport] Parameter functions initialized');
+        console.log('[DashboardEmailExport] Parameter functions wrapped successfully');
     }
 
-    // Initialize when DOM is ready
+    // Try to initialize after a delay to ensure ScheduledReports loads first
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initDashboardExportOption);
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(initDashboardExportOption, 500);
+        });
     } else {
-        initDashboardExportOption();
-    }
-
-    // Also try to initialize when piwik is ready
-    if (typeof window.piwik !== 'undefined' && window.piwik.on) {
-        window.piwik.on('piwikPageChange', initDashboardExportOption);
+        setTimeout(initDashboardExportOption, 500);
     }
 })();
