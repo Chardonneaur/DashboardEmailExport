@@ -8,50 +8,61 @@
 (function() {
     'use strict';
 
-    // Wait for the window to be ready
-    if (typeof window.resetReportParametersFunctions === 'undefined') {
-        window.resetReportParametersFunctions = {};
-    }
-    if (typeof window.updateReportParametersFunctions === 'undefined') {
-        window.updateReportParametersFunctions = {};
-    }
-    if (typeof window.getReportParametersFunctions === 'undefined') {
-        window.getReportParametersFunctions = {};
-    }
+    // Wait for DOM and ensure the report form exists
+    function initDashboardExportOption() {
+        // Extend the parameter functions for email type
+        var reportType = 'email';
 
-    var originalReset = window.resetReportParametersFunctions['email'];
-    var originalUpdate = window.updateReportParametersFunctions['email'];
-    var originalGet = window.getReportParametersFunctions['email'];
+        // Store original functions
+        var origReset = window.resetReportParametersFunctions ? window.resetReportParametersFunctions[reportType] : null;
+        var origUpdate = window.updateReportParametersFunctions ? window.updateReportParametersFunctions[reportType] : null;
+        var origGet = window.getReportParametersFunctions ? window.getReportParametersFunctions[reportType] : null;
 
-    // Extend reset function
-    window.resetReportParametersFunctions['email'] = function(report) {
-        if (originalReset) {
-            originalReset(report);
-        }
-        report.includeDashboard = false;
-        report.dashboardId = 1;
-    };
+        // Ensure objects exist
+        window.resetReportParametersFunctions = window.resetReportParametersFunctions || {};
+        window.updateReportParametersFunctions = window.updateReportParametersFunctions || {};
+        window.getReportParametersFunctions = window.getReportParametersFunctions || {};
 
-    // Extend update function
-    window.updateReportParametersFunctions['email'] = function(report) {
-        if (originalUpdate) {
-            originalUpdate(report);
-        }
-        if (report && report.parameters) {
-            if ('includeDashboard' in report.parameters) {
-                report.includeDashboard = report.parameters.includeDashboard;
+        // Extend reset function
+        window.resetReportParametersFunctions[reportType] = function(report) {
+            if (origReset) origReset(report);
+            report.includeDashboard = false;
+            report.dashboardId = 1;
+        };
+
+        // Extend update function
+        window.updateReportParametersFunctions[reportType] = function(report) {
+            if (origUpdate) origUpdate(report);
+            if (report && report.parameters) {
+                if ('includeDashboard' in report.parameters) {
+                    report.includeDashboard = report.parameters.includeDashboard;
+                }
+                if ('dashboardId' in report.parameters) {
+                    report.dashboardId = report.parameters.dashboardId;
+                }
             }
-            if ('dashboardId' in report.parameters) {
-                report.dashboardId = report.parameters.dashboardId;
-            }
-        }
-    };
+        };
 
-    // Extend get function
-    window.getReportParametersFunctions['email'] = function(report) {
-        var result = originalGet ? originalGet(report) : {};
-        result.includeDashboard = report.includeDashboard || false;
-        result.dashboardId = report.dashboardId || 1;
-        return result;
-    };
+        // Extend get function
+        window.getReportParametersFunctions[reportType] = function(report) {
+            var result = origGet ? origGet(report) : {};
+            result.includeDashboard = report.includeDashboard || false;
+            result.dashboardId = report.dashboardId || 1;
+            return result;
+        };
+
+        console.log('[DashboardEmailExport] Parameter functions initialized');
+    }
+
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initDashboardExportOption);
+    } else {
+        initDashboardExportOption();
+    }
+
+    // Also try to initialize when piwik is ready
+    if (typeof window.piwik !== 'undefined' && window.piwik.on) {
+        window.piwik.on('piwikPageChange', initDashboardExportOption);
+    }
 })();

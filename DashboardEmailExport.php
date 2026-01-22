@@ -43,6 +43,7 @@ class DashboardEmailExport extends Plugin
     public function getJsFiles(&$jsFiles)
     {
         $jsFiles[] = 'plugins/DashboardEmailExport/vue/dist/DashboardEmailExport.umd.min.js';
+        $jsFiles[] = 'plugins/DashboardEmailExport/javascripts/dashboardExportOption.js';
     }
 
     public function getClientSideTranslationKeys(&$translationKeys)
