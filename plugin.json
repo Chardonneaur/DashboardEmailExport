@@ -1,0 +1,24 @@
+{
+    "name": "DashboardEmailExport",
+    "description": "Extends email reports to include a checkbox that allows exporting the full dashboard with all widgets in PDF format.",
+    "version": "1.0.0",
+    "theme": false,
+    "require": {
+        "piwik": ">=4.0.0,<6.0.0"
+    },
+    "authors": [
+        {
+            "name": "Matomo Plugin Developer",
+            "homepage": "https://matomo.org"
+        }
+    ],
+    "license": "GPL v3+",
+    "homepage": "https://github.com/matomo-org/matomo",
+    "keywords": [
+        "dashboard",
+        "email",
+        "export",
+        "pdf",
+        "scheduled reports"
+    ]
+}

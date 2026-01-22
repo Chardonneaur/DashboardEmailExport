@@ -1,0 +1,7 @@
+{
+    "DashboardEmailExport": {
+        "IncludeDashboard": "Include Dashboard Widgets",
+        "IncludeDashboardHelp": "When enabled, all widgets from the selected dashboard will be included in the PDF export.",
+        "SelectDashboard": "Select Dashboard"
+    }
+}

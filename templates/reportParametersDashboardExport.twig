@@ -1,0 +1,7 @@
+<div
+  vue-entry="DashboardEmailExport.DashboardExportOption"
+  report-type="{{ reportType|default(null)|json_encode|e('html_attr') }}"
+  default-include-dashboard="{{ defaultIncludeDashboard|default(false)|json_encode|e('html_attr') }}"
+  default-dashboard-id="{{ defaultDashboardId|default(1)|json_encode|e('html_attr') }}"
+  dashboards="{{ dashboards|default([])|json_encode|e('html_attr') }}"
+></div>
